@@ -3,6 +3,7 @@ package com.example.functionalerrorhandlingslides
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -14,6 +15,8 @@ import com.example.functionalerrorhandlingslides.ui.theme.FunctionalErrorHandlin
 
 class MainActivity : ComponentActivity() {
 
+    val viewModel by viewModels<CartViewModel>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -24,6 +27,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        viewModel.onBarcodeScanAndCheckout("12345678")
     }
 }
 
