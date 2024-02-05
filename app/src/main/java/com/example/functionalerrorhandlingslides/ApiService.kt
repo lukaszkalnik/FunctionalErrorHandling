@@ -1,6 +1,8 @@
 package com.example.functionalerrorhandlingslides
 
+import arrow.core.Either
 import arrow.retrofit.adapter.either.EitherCallAdapterFactory
+import arrow.retrofit.adapter.either.networkhandling.CallError
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -13,16 +15,16 @@ import retrofit2.http.Path
 interface ApiService {
 
     @GET("scan/{ean}")
-    suspend fun scanBarcode(@Path("ean") ean: String): Product
+    suspend fun scanBarcode(@Path("ean") ean: String): Either<CallError, Product>
 
     @POST("cart/add")
-    suspend fun addToCart(@Body cartItem: CartItem): Cart
+    suspend fun addToCart(@Body cartItem: CartItem): Either<CallError, Cart>
 
     @POST("coupon")
-    suspend fun redeemCoupon(@Body productCouponToRedeem: ProductCouponToRedeem): Cart
+    suspend fun redeemCoupon(@Body productCouponToRedeem: ProductCouponToRedeem): Either<CallError, Cart>
 
     @POST("checkout/{cartId}")
-    suspend fun checkout(@Path("cartId") cartId: String): Unit
+    suspend fun checkout(@Path("cartId") cartId: String): Either<CallError, Unit>
 
     companion object {
 
