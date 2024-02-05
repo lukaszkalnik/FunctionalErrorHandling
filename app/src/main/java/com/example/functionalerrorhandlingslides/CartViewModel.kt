@@ -3,6 +3,7 @@ package com.example.functionalerrorhandlingslides
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import arrow.core.raise.either
+import arrow.retrofit.adapter.either.networkhandling.CallError
 import arrow.retrofit.adapter.either.networkhandling.HttpError
 import arrow.retrofit.adapter.either.networkhandling.IOError
 import arrow.retrofit.adapter.either.networkhandling.UnexpectedCallError
@@ -44,12 +45,8 @@ class CartViewModel : ViewModel() {
 
             result.fold(
                 ifLeft = { callError ->
-                    val message = when (callError) {
-                        is HttpError -> callError.message
-                        is IOError -> "Check your internet connection"
-                        is UnexpectedCallError -> "Unknown error"
-                    }
-                    uiState.value = Error(message = message)
+                    val message = extractErrorMessage(callError)
+                    uiState.value = UiError(message = message)
                 },
                 ifRight = { totalDiscountedCartPrice ->
                     uiState.value = Success(totalDiscountedCartPrice = totalDiscountedCartPrice)
@@ -57,9 +54,15 @@ class CartViewModel : ViewModel() {
             )
         }
     }
+
+    private fun extractErrorMessage(callError: CallError) = when (callError) {
+        is HttpError -> callError.message
+        is IOError -> "Check your internet connection"
+        is UnexpectedCallError -> "Unknown error"
+    }
 }
 
 sealed class CartState
 data object Loading : CartState()
-data class Error(val message: String) : CartState()
+data class UiError(val message: String) : CartState()
 data class Success(val totalDiscountedCartPrice: Float) : CartState()
