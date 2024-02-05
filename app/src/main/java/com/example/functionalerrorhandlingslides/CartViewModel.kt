@@ -3,12 +3,18 @@ package com.example.functionalerrorhandlingslides
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import arrow.core.raise.either
+import arrow.retrofit.adapter.either.networkhandling.HttpError
+import arrow.retrofit.adapter.either.networkhandling.IOError
+import arrow.retrofit.adapter.either.networkhandling.UnexpectedCallError
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class CartViewModel : ViewModel() {
 
     private val api = ApiService.instance()
     private val couponRepository = CouponRepository()
+
+    val uiState: MutableStateFlow<CartState> = MutableStateFlow(Loading)
 
     fun onBarcodeScanAndCheckout(ean: String) {
         viewModelScope.launch {
@@ -24,7 +30,7 @@ class CartViewModel : ViewModel() {
 
                 val couponId = couponRepository.getCouponId(product.id).bind()
 
-                val cartWithCoupon = api.redeemCoupon(
+                val discountedCart = api.redeemCoupon(
                     ProductCouponToRedeem(
                         cartId = cart.id,
                         productId = product.id,
@@ -32,8 +38,28 @@ class CartViewModel : ViewModel() {
                     )
                 ).bind()
 
-                api.checkout(cartId = cartWithCoupon.id).bind()
+                api.checkout(cartId = discountedCart.id).bind()
+                discountedCart.totalDiscountedPrice
             }
+
+            result.fold(
+                ifLeft = { callError ->
+                    val message = when (callError) {
+                        is HttpError -> callError.message
+                        is IOError -> "Check your internet connection"
+                        is UnexpectedCallError -> "Unknown error"
+                    }
+                    uiState.value = Error(message = message)
+                },
+                ifRight = { totalDiscountedCartPrice ->
+                    uiState.value = Success(totalDiscountedCartPrice = totalDiscountedCartPrice)
+                }
+            )
         }
     }
 }
+
+sealed class CartState
+data object Loading : CartState()
+data class Error(val message: String) : CartState()
+data class Success(val totalDiscountedCartPrice: Float) : CartState()

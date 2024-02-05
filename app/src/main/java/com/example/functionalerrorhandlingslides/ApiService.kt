@@ -21,7 +21,7 @@ interface ApiService {
     suspend fun addToCart(@Body cartItem: CartItem): Either<CallError, Cart>
 
     @POST("coupon")
-    suspend fun redeemCoupon(@Body productCouponToRedeem: ProductCouponToRedeem): Either<CallError, Cart>
+    suspend fun redeemCoupon(@Body productCouponToRedeem: ProductCouponToRedeem): Either<CallError, DiscountedCart>
 
     @POST("checkout/{cartId}")
     suspend fun checkout(@Path("cartId") cartId: String): Either<CallError, Unit>
@@ -53,7 +53,13 @@ data class Cart(
     val id: String,
     val items: List<CartItem>,
     val totalPrice: Float,
-    val totalDiscountedPrice: Float?,
+)
+
+data class DiscountedCart(
+    val id: String,
+    val items: List<CartItem>,
+    val totalPrice: Float,
+    val totalDiscountedPrice: Float,
 )
 
 data class ProductCouponToRedeem(
